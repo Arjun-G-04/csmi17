@@ -1,0 +1,1 @@
+em++ sum.cpp -o sum.js -sMODULARIZE -sEXPORT_ES6 --emit-tsd sum.d.ts 
