@@ -1,2 +1,8 @@
+
 CompileFlags:
-  Add: [-I/Users/arjun/Downloads/emsdk/upstream/emscripten/cache/sysroot/include]
+  Add:
+    - -I/Users/arjun/Downloads/emsdk/upstream/emscripten/cache/sysroot/include/c++/v1
+    - -I/Users/arjun/Downloads/emsdk/upstream/lib/clang/22/include
+    - -I/Users/arjun/Downloads/emsdk/upstream/emscripten/cache/sysroot/include
+    - -I/Users/arjun/Downloads/emsdk/upstream/emscripten/cache/sysroot/include/fakesdl
+    - -I/Users/arjun/Downloads/emsdk/upstream/emscripten/cache/sysroot/include/compat
