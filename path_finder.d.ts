@@ -22,11 +22,31 @@ export interface VectorPairIntInt {
 }
 
 /**
+ * Represents a C++ std::vector<std::vector<int>>.
+ * This wrapper object must also be manually deleted.
+ */
+export interface VectorVectorInt {
+  push_back(item: VectorInt): void;
+  delete(): void;
+}
+
+/**
+ * Represents a C++ std::vector<int>.
+ * This wrapper object must also be manually deleted.
+ */
+export interface VectorInt {
+  push_back(item: number): void;
+  delete(): void;
+}
+
+/**
  * Describes the main module instance that
  * contains all your exported functions.
  */
 export interface PathFinderModule {
-  dfs(): VectorPairIntInt;
+  dfs(blocked: VectorVectorInt, start: PairIntInt, end: PairIntInt, grid_size: number): VectorPairIntInt;
+  VectorVectorInt: { new(): VectorVectorInt; };
+  VectorInt: { new(): VectorInt; };
 }
 
 /**

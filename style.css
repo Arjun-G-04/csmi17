@@ -8,16 +8,20 @@ body {
 }
 #grid-container {
   display: grid;
-  grid-template-columns: repeat(20, 1fr);
-  grid-template-rows: repeat(20, 1fr);
+  grid-template-columns: repeat(50, 1fr);
+  grid-template-rows: repeat(50, 1fr);
   width: 90vh; /* Use viewport height for width to maintain aspect ratio */
   height: 90vh; /* Almost full height */
   border: 1px solid lightgray; /* Outer border */
   box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
+
 #grid-container div {
   border: 1px solid lightgray;
   box-sizing: border-box;
+  transition: all;
+  transition-duration: 2000ms;
+  transition-timing-function: ease-in-out;
 }
 
 .blocked {
