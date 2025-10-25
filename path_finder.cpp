@@ -1,4 +1,5 @@
 #include <emscripten/bind.h>
+#include <emscripten.h>
 
 #include <cmath>
 #include <queue>
@@ -111,6 +112,38 @@ vector<pair<int, int>> astar(int grid_size, vector<vector<int>> blocked,
 	return path;
 }
 
+void astar_streaming(int grid_size, vector<vector<int>> blocked,
+							 pair<int, int> start, pair<int, int> end,
+							 val callback) {
+	vector<vector<double>> h(grid_size, vector<double>(grid_size, 0));
+	for (int i = 0; i < grid_size; i++) {
+		for (int j = 0; j < grid_size; j++) {
+			h[i][j] = pow(i - end.first, 2) + pow(j - end.second, 2);
+		}
+	}
+
+	vector<vector<int>> visited(grid_size, vector<int>(grid_size, 0));
+	priority_queue<Node, vector<Node>, NodeCompMin> pq;
+	pq.push({h[start.first][start.second], 0, {start.first, start.second}});
+	visited[start.first][start.second] = 1;
+	
+	while (!pq.empty()) {
+	    Node curr = pq.top();
+		pq.pop();
+		callback(curr.coords.first, curr.coords.second);
+		
+		if (end.first == curr.coords.first && end.second == curr.coords.second) break;
+		
+		vector<pair<int,int>> next = next_nodes(curr.coords, visited, blocked, grid_size);
+		for (auto node : next) {
+            visited[node.first][node.second] = 1;
+            int c = curr.c + 1;
+            double f = h[node.first][node.second] + c; 
+            pq.push({f, c, {node.first, node.second}});
+		}
+	}
+}
+
 vector<pair<int, int>> bfs(int grid_size, vector<vector<int>> blocked,
 						   pair<int, int> start, pair<int, int> end) {
 	vector<pair<int, int>> path;
@@ -150,6 +183,16 @@ vector<pair<int, int>> find_path(int grid_size, vector<vector<int>> blocked,
 	}
 }
 
+void find_path_streaming(int grid_size, vector<vector<int>> blocked,
+								 pair<int, int> start, pair<int, int> end,
+								 string method, val callback) {
+	if (method == "astar") {
+		astar_streaming(grid_size, blocked, start, end, callback);
+	} else {
+		// Other algorithms not implemented for streaming in this prototype
+	}
+}
+
 EMSCRIPTEN_BINDINGS(path_finder) {
 	value_object<pair<int, int>>("PairIntInt")
 		.field("first", &pair<int, int>::first)
@@ -158,4 +201,5 @@ EMSCRIPTEN_BINDINGS(path_finder) {
 	register_vector<int>("VectorInt");
 	register_vector<vector<int>>("VectorVectorInt");
 	function("find_path", &find_path);
+	function("find_path_streaming", &find_path_streaming);
 }
