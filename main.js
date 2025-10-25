@@ -1,7 +1,7 @@
 import createPathFinderModule from "./path_finder.js";
 
 const gridContainer = document.getElementById('grid-container');
-const GRID_SIZE = 50;
+const GRID_SIZE = 100;
 const grid = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0)); // 0 for open, 1 for blocked
 
 for (let i = 0; i < GRID_SIZE; i++) {
@@ -17,7 +17,7 @@ for (let i = 0; i < GRID_SIZE; i++) {
   }
 }
 
-const start = { first: 0, second: GRID_SIZE - 1 };
+const start = { first: GRID_SIZE/2, second: GRID_SIZE-1 };
 const end = { first: GRID_SIZE - 1, second: 0 };
 
 // Ensure start and end points are not blocked
@@ -42,7 +42,7 @@ async function main() {
     row.delete();
   }
   
-  const cppResult = Module.dfs(GRID_SIZE, blocked, start, end);
+  const cppResult = Module.find_path(GRID_SIZE, blocked, start, end, "astar");
   blocked.delete();
   
   const size = cppResult.size();

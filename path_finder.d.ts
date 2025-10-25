@@ -44,7 +44,7 @@ export interface VectorInt {
  * contains all your exported functions.
  */
 export interface PathFinderModule {
-  dfs(blocked: VectorVectorInt, start: PairIntInt, end: PairIntInt, grid_size: number): VectorPairIntInt;
+  find_path(blocked: VectorVectorInt, start: PairIntInt, end: PairIntInt, grid_size: number, method: 'dfs' | 'bfs' | 'astar'): VectorPairIntInt;
   VectorVectorInt: { new(): VectorVectorInt; };
   VectorInt: { new(): VectorInt; };
 }
