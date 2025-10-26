@@ -1,8 +1,10 @@
 body {
   display: flex;
+  flex-direction: row;
+  gap: 4rem;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   margin: 0;
-  background-color: #f0f0f0; /* Light background for contrast */
+  background-color: #f0f0f0;
 }

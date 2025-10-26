@@ -1,1 +1,13 @@
-Hi! This is my CSMI17 Assignment :)
+# CSMI17 Assignment - Part 1
+### Arjun G
+### 111122015
+### MECH 2022-26
+---
+## Info
+This repository contains the code used for the first question of the assignment. The path finding logic is run in the WebAssembly environment compiled from C++ source code.
+
+## Sample iterations of euclidean distance heuristic
+
+## Sample iterations of manhattan distance heuristic
+
+## Sample iterations of euclidean distance + block negation heuristic

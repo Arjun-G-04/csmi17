@@ -1,5 +1,5 @@
-#include <emscripten/bind.h>
 #include <emscripten.h>
+#include <emscripten/bind.h>
 
 #include <cmath>
 #include <queue>
@@ -17,9 +17,9 @@ using std::stack;
 using std::string;
 using std::vector;
 
-int mod(int n) {
-    return n > 0 ? n : -n;
-}
+double astar_streaming_execution_time_ms = 0;
+
+int mod(int n) { return n > 0 ? n : -n; }
 
 vector<pair<int, int>> next_nodes(pair<int, int> &curr_node,
 								  vector<vector<int>> &visited,
@@ -42,32 +42,6 @@ vector<pair<int, int>> next_nodes(pair<int, int> &curr_node,
 	return nodes;
 }
 
-vector<pair<int, int>> dfs(int grid_size, vector<vector<int>> blocked,
-						   pair<int, int> start, pair<int, int> end) {
-	vector<pair<int, int>> path;
-	stack<pair<int, int>> stk;
-	vector<vector<int>> visited(grid_size, vector<int>(grid_size, 0));
-	stk.push(start);
-	visited[start.first][start.second] = 1;
-
-	while (!stk.empty()) {
-		pair<int, int> curr = stk.top();
-		stk.pop();
-		path.push_back(curr);
-
-		if (curr.first == end.first && curr.second == end.second) break;
-
-		vector<pair<int, int>> next =
-			next_nodes(curr, visited, blocked, grid_size);
-		for (auto node : next) {
-			visited[node.first][node.second] = 1;
-			stk.push(node);
-		}
-	}
-
-	return path;
-}
-
 struct Node {
 	double f;
 	int c;
@@ -78,13 +52,39 @@ struct NodeCompMin {
 	bool operator()(const Node &a, const Node &b) { return a.f > b.f; }
 };
 
-vector<pair<int, int>> astar(int grid_size, vector<vector<int>> blocked,
-							 pair<int, int> start, pair<int, int> end) {
-	vector<pair<int, int>> path;
+int astar_streaming(int grid_size, vector<vector<int>> blocked,
+					pair<int, int> start, pair<int, int> end, int h_choice,
+					val callback) {
 	vector<vector<double>> h(grid_size, vector<double>(grid_size, 0));
+
 	for (int i = 0; i < grid_size; i++) {
 		for (int j = 0; j < grid_size; j++) {
-			h[i][j] = pow(i - end.first, 2) + pow(j - end.second, 2);
+			if (h_choice == 1 || h_choice == 3) {
+				// Euclidean distance
+				h[i][j] = pow(i - end.first, 2) + pow(j - end.second, 2);
+			} else if (h_choice == 2) {
+				// Manhattan Distance
+				h[i][j] = mod(i - end.first) + mod(j - end.second);
+			}
+		}
+	}
+
+	int r = 3;
+	if (h_choice == 3) {
+		for (int i = 0; i < grid_size; i++) {
+			for (int j = 0; j < grid_size; j++) {
+				if (blocked[i][j] == 1) {
+					for (int x = -r; x <= r; x++) {
+						for (int y = -r; y <= r; y++) {
+							if (x == 0 && y == 0) continue;
+							if (i + x < 0 || i + x >= grid_size || j + y < 0 ||
+								j + y >= grid_size)
+								continue;
+							h[i + x][j + y] *= 0.99;
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -92,105 +92,46 @@ vector<pair<int, int>> astar(int grid_size, vector<vector<int>> blocked,
 	priority_queue<Node, vector<Node>, NodeCompMin> pq;
 	pq.push({h[start.first][start.second], 0, {start.first, start.second}});
 	visited[start.first][start.second] = 1;
-	
-	while (!pq.empty()) {
-	    Node curr = pq.top();
-		pq.pop();
-		path.push_back(curr.coords);
-		
-		if (end.first == curr.coords.first && end.second == curr.coords.second) break;
-		
-		vector<pair<int,int>> next = next_nodes(curr.coords, visited, blocked, grid_size);
-		for (auto node : next) {
-            visited[node.first][node.second] = 1;
-            int c = curr.c + 1;
-            double f = h[node.first][node.second] + c; 
-            pq.push({f, c, {node.first, node.second}});
-		}
-	}
-	
-	return path;
-}
 
-void astar_streaming(int grid_size, vector<vector<int>> blocked,
-							 pair<int, int> start, pair<int, int> end,
-							 val callback) {
-	vector<vector<double>> h(grid_size, vector<double>(grid_size, 0));
-	for (int i = 0; i < grid_size; i++) {
-		for (int j = 0; j < grid_size; j++) {
-			h[i][j] = pow(i - end.first, 2) + pow(j - end.second, 2);
-		}
-	}
-
-	vector<vector<int>> visited(grid_size, vector<int>(grid_size, 0));
-	priority_queue<Node, vector<Node>, NodeCompMin> pq;
-	pq.push({h[start.first][start.second], 0, {start.first, start.second}});
-	visited[start.first][start.second] = 1;
-	
+	int ct = 0;
 	while (!pq.empty()) {
-	    Node curr = pq.top();
+		Node curr = pq.top();
 		pq.pop();
 		callback(curr.coords.first, curr.coords.second);
-		
-		if (end.first == curr.coords.first && end.second == curr.coords.second) break;
-		
-		vector<pair<int,int>> next = next_nodes(curr.coords, visited, blocked, grid_size);
-		for (auto node : next) {
-            visited[node.first][node.second] = 1;
-            int c = curr.c + 1;
-            double f = h[node.first][node.second] + c; 
-            pq.push({f, c, {node.first, node.second}});
-		}
-	}
-}
 
-vector<pair<int, int>> bfs(int grid_size, vector<vector<int>> blocked,
-						   pair<int, int> start, pair<int, int> end) {
-	vector<pair<int, int>> path;
-	queue<pair<int, int>> q;
-	vector<vector<int>> visited(grid_size, vector<int>(grid_size, 0));
-	q.push(pair<int, int>(start.first, start.second));
-	visited[start.first][start.second] = 1;
+		if (end.first == curr.coords.first && end.second == curr.coords.second)
+			break;
 
-	while (!q.empty()) {
-		pair<int, int> curr = q.front();
-		q.pop();
-		path.push_back(curr);
-
-		if (curr.first == end.first && curr.second == end.second) break;
 		vector<pair<int, int>> next =
-			next_nodes(curr, visited, blocked, grid_size);
+			next_nodes(curr.coords, visited, blocked, grid_size);
 		for (auto node : next) {
 			visited[node.first][node.second] = 1;
-			q.push(node);
+			int c = curr.c + 1;
+			double f = h[node.first][node.second] + c;
+			pq.push({f, c, {node.first, node.second}});
 		}
+		ct++;
 	}
 
-	return path;
+	return ct;
 }
 
-vector<pair<int, int>> find_path(int grid_size, vector<vector<int>> blocked,
-								 pair<int, int> start, pair<int, int> end,
-								 string method) {
-	if (method == "dfs") {
-		return dfs(grid_size, blocked, start, end);
-	} else if (method == "bfs") {
-		return bfs(grid_size, blocked, start, end);
-	} else if (method == "astar") {
-	    return astar(grid_size, blocked, start, end);
-	} else {
-		return vector<pair<int, int>>();
-	}
-}
-
-void find_path_streaming(int grid_size, vector<vector<int>> blocked,
-								 pair<int, int> start, pair<int, int> end,
-								 string method, val callback) {
+vector<int> find_path_streaming(int grid_size, vector<vector<int>> blocked,
+								pair<int, int> start, pair<int, int> end,
+								string method, int h_choice, val callback) {
+	vector<int> results;
 	if (method == "astar") {
-		astar_streaming(grid_size, blocked, start, end, callback);
-	} else {
-		// Other algorithms not implemented for streaming in this prototype
+		double start_time = emscripten_get_now();
+		int count =
+			astar_streaming(grid_size, blocked, start, end, h_choice, callback);
+		double end_time = emscripten_get_now();
+		astar_streaming_execution_time_ms = end_time - start_time;
+		
+		results.push_back(count);
+		results.push_back(astar_streaming_execution_time_ms);
 	}
+	
+	return results;
 }
 
 EMSCRIPTEN_BINDINGS(path_finder) {
@@ -200,6 +141,5 @@ EMSCRIPTEN_BINDINGS(path_finder) {
 	register_vector<pair<int, int>>("VectorPairIntInt");
 	register_vector<int>("VectorInt");
 	register_vector<vector<int>>("VectorVectorInt");
-	function("find_path", &find_path);
 	function("find_path_streaming", &find_path_streaming);
 }
