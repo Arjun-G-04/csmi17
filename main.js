@@ -4,7 +4,7 @@ import { initVariables } from "./init.js";
 
 // Important PARAMETERS
 const GRID_SIZE = 50;
-const NO_OF_ITERATIONS = 2000;
+const NO_OF_ITERATIONS = 1000;
 const ITERATION_TIMEOUT = 0;
 
 let { grid, start, end, Module, blocked } = await initVariables(GRID_SIZE);

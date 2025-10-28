@@ -3,7 +3,6 @@
 
 #include <cmath>
 #include <queue>
-#include <stack>
 #include <string>
 #include <utility>
 #include <vector>
@@ -12,8 +11,7 @@ using namespace emscripten;
 using std::pair;
 using std::pow;
 using std::priority_queue;
-using std::queue;
-using std::stack;
+using std::sqrt;
 using std::string;
 using std::vector;
 
@@ -60,8 +58,8 @@ int astar_streaming(int grid_size, vector<vector<int>> blocked,
 	for (int i = 0; i < grid_size; i++) {
 		for (int j = 0; j < grid_size; j++) {
 			if (h_choice == 1 || h_choice == 3) {
-				// Euclidean distance
-				h[i][j] = pow(i - end.first, 2) + pow(j - end.second, 2);
+				// Euclidean distance -> 30% more weightage than cost fn
+				h[i][j] = 1.3*sqrt(pow(i - end.first, 2) + pow(j - end.second, 2));
 			} else if (h_choice == 2) {
 				// Manhattan Distance
 				h[i][j] = mod(i - end.first) + mod(j - end.second);
@@ -80,7 +78,7 @@ int astar_streaming(int grid_size, vector<vector<int>> blocked,
 							if (i + x < 0 || i + x >= grid_size || j + y < 0 ||
 								j + y >= grid_size)
 								continue;
-							h[i + x][j + y] *= 0.99;
+							h[i + x][j + y] *= 1.01;
 						}
 					}
 				}
